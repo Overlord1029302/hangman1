@@ -1,0 +1,162 @@
+<html>
+    <head>
+        <style>
+            body {
+                font-family: "Arial",sans-serif;
+                text-align: center;
+                margin: 0;
+                padding: 0;
+                background: linear-gradient(to bottom right,#001eff,#9000ff);
+            }
+
+            .container {
+                max-width: 600px;
+                margin: auto;
+                padding: 20px;
+            }
+
+            #word {
+                font-size: 2rem;
+                letter-spacing: 5px;
+                margin: 20px 0;
+            }
+            #message {
+                font-size: 1.2em;
+                color: red;
+                margin: 10px 0;
+            }
+                
+
+            .letters button {
+                font-size: 1.2em;
+                margin: 5px;
+                padding: 10px 15px;
+                cursor: pointer;
+                background-color: #e0e0e0;
+                border: none;
+                border-radius: 5px;
+                transition: background-color 0.3s;
+            }
+            .letters button:hover {
+                background-color: #d6d6d6;
+            }
+            .letters button:disabled {
+                background-color: #bbb;
+            }
+            canvas {
+                margin: 20px auto;
+                display: block;
+                background-color: #fff;
+                border: 1px solid #ccc;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Hangman Game</h1>
+            <canvas id="hangmanCanvas" width="200" height="300"></canvas>
+            <div id="word">_ _ _ _ _</div>
+            <div id="message"></div>
+            <div class="letters"></div>
+            <div id="status"></div>
+        </div>
+
+        <script>
+            const words = ["javascript","man","coding","browser","computer","language","programmer","html","css","balls","skibidi","message","words","ligma"];
+            const randomWord= words[Math.floor(Math.random()*words.length)].trim();
+            const wordDisplay = document.getElementById("word");
+            const messageDisplay = document.getElementById("message");
+            const lettersContainer = document.querySelector(".letters");
+            const statusDisplay = document.getElementById("status");
+            const canvas = document.getElementById("hangmanCanvas");
+            const ctx = canvas.getContext("2d");
+
+            let guessedWord = Array(randomWord.length).fill("_")
+            let attemptsLeft = 6;
+
+            const drawHangman = () => {
+                const parts = [
+                () => {ctx.beginPath(); ctx.arc(100,50,20,0,Math.PI*2); ctx.stroke();},
+                () => {ctx.moveTo(100,70); ctx.lineTo(100,150); ctx.stroke();},
+                () => {ctx.moveTo(100,80); ctx.lineTo(80,120); ctx.stroke();},
+                () => {ctx.moveTo(100,90); ctx.lineTo(120,120); ctx.stroke();},
+                () => {ctx.moveTo(100,150); ctx.lineTo(80,190); ctx.stroke();},
+                () => {ctx.moveTo(100,150); ctx.lineTo(120,190); ctx.stroke();},
+                ];
+                const step = 6-attemptsLeft;
+                if (step >= 1 && step <= parts.length) {
+                    parts[step-1]();
+                }
+            };
+
+            const setupCanvas = () => {
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = "#000";
+                ctx.moveTo(10,250);
+                ctx.lineTo(150,250);
+                ctx.stroke();
+                ctx.moveTo(50,250);
+                ctx.lineTo(50,20);
+                ctx.lineTo(100,20);
+                ctx.lineTo(100,30);
+                ctx.stroke();
+            };
+
+            function renderWord() {
+                wordDisplay.textContent = guessedWord.join(" ");
+            }
+
+            function endGame(win) {
+                const msg = win ?  "🎉 You Win! The word was " : "😢 Game Over. The word was ";
+                statusDisplay.textContent = msg + randomWord;
+                Array.from(lettersContainer.children).forEach(button => button.disabled = true);
+            }
+            
+            function handleGuess(letter) {
+                let correct = false;
+                randomWord.split("").forEach((char,index) => {
+                    if (char==letter) {
+                        guessedWord[index] = letter;
+                        correct = true
+                    }
+                });
+
+                renderWord();
+
+                if (correct) {
+                    messageDisplay.textContent = "Correct!";
+                    if (!guessedWord.includes("_")) {
+                        endGame(true)
+                    }
+                } else {
+                    messageDisplay.textContent = "Wrong!";
+                    attemptsLeft--;
+                    drawHangman();
+                    if (attemptsLeft === 0) {
+                        endGame(false);
+                    }
+                }
+            }
+
+            function createLetterButtons() {
+                for (let i = 97; i<=122; i++) {
+                    const letter = String.fromCharCode(i);
+                    const button = document.createElement("button");
+                    button.textContent = letter;
+                    button.addEventListener("click",()=> {
+                        button.disabled = true;
+                        handleGuess(letter);
+                    });
+                    lettersContainer.appendChild(button);
+                }
+            }
+
+            setupCanvas();
+            renderWord();
+            createLetterButtons();
+            
+
+
+        </script>
+    </body>
+</html>
